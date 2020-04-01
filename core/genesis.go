@@ -200,6 +200,11 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*params.ChainConfig
 	// config is supplied. These chains would get AllProtocolChanges (and a compat error)
 	// if we just continued here.
 	if genesis == nil && stored != params.MainnetGenesisHash {
+		// /Quorum
+		// for nodes which are migrating from earlier versions maxCodeSizeConfig will not
+		// be populated. populate the same based on maxCodeSize and maxCodeSizeChangeBlock
+		storedcfg.PopulateDefaultMaxCodeData()
+		// Quorum
 		return storedcfg, stored, nil
 	}
 

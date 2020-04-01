@@ -345,7 +345,7 @@ func (c *ChainConfig) GetMaxCodeSize(num *big.Int) int {
 
 // create the default MaxCodeSizeConfig array based on current
 // values of maxCodeSize and maxCodeSizeChangeBlock
-func (c *ChainConfig) populateDefaultMaxCodeData() {
+func (c *ChainConfig) PopulateDefaultMaxCodeData() {
 	// first time new structure is in use. Set the default record b
 	defaultMaxCodeRec := MaxCodeConfigStruct{big.NewInt(0), MaxCodeSize / 1024}
 
@@ -408,7 +408,7 @@ func isMaxCodeSizeConfigCompatible(c1, c2 *ChainConfig, head *big.Int) (error, *
 	if len(c2.MaxCodeSizeConfig) > 0 {
 		// populate the default data in current config
 		if len(c1.MaxCodeSizeConfig) == 0 {
-			c1.populateDefaultMaxCodeData()
+			c1.PopulateDefaultMaxCodeData()
 		}
 	}
 
