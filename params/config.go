@@ -197,15 +197,14 @@ type ChainConfig struct {
 	IsQuorum             bool   `json:"isQuorum"`
 	TransactionSizeLimit uint64 `json:"txnSizeLimit"`
 	MaxCodeSize          uint64 `json:"maxCodeSize"`
-	// Quorum
+	// /Quorum
 	//
 	// QIP714Block implements the permissions related changes
 	QIP714Block            *big.Int              `json:"qip714Block,omitempty"`
 	MaxCodeSizeChangeBlock *big.Int              `json:"maxCodeSizeChangeBlock,omitempty"`
-	// Quorum
-	//
-	// MaxCodeSizeConfig for handling multiple maxCodeSize changes
+	// to track multiple changes to maxCodeSize
 	MaxCodeSizeConfig      []MaxCodeConfigStruct `json:"maxCodeSizeConfig,omitempty"`
+	// Quorum
 }
 
 // EthashConfig is the consensus engine configs for proof-of-work based sealing.
@@ -346,11 +345,14 @@ func (c *ChainConfig) GetMaxCodeSize(num *big.Int) int {
 // create the default MaxCodeSizeConfig array based on current
 // values of maxCodeSize and maxCodeSizeChangeBlock
 func (c *ChainConfig) PopulateDefaultMaxCodeData() {
+	if len(c.MaxCodeSizeConfig) > 0 {
+		return
+	}
 	// first time new structure is in use. Set the default record b
 	defaultMaxCodeRec := MaxCodeConfigStruct{big.NewInt(0), MaxCodeSize / 1024}
 
 	if c.MaxCodeSize != 0 &&
-		(c.MaxCodeSizeChangeBlock != nil && c.MaxCodeSizeChangeBlock.Cmp(big.NewInt(0)) == 0) {
+		(c.MaxCodeSizeChangeBlock != nil && c.MaxCodeSizeChangeBlock.Cmp(big.NewInt(0)) > 0) {
 		// add two entries in this case
 		c.MaxCodeSizeConfig = append(c.MaxCodeSizeConfig, defaultMaxCodeRec)
 		maxCodeSizeRec := MaxCodeConfigStruct{c.MaxCodeSizeChangeBlock, c.MaxCodeSize}
@@ -406,10 +408,7 @@ func isMaxCodeSizeConfigCompatible(c1, c2 *ChainConfig, head *big.Int) (error, *
 	}
 
 	if len(c2.MaxCodeSizeConfig) > 0 {
-		// populate the default data in current config
-		if len(c1.MaxCodeSizeConfig) == 0 {
-			c1.PopulateDefaultMaxCodeData()
-		}
+		c1.PopulateDefaultMaxCodeData()
 	}
 
 	// check the number of records below current head in both configs
