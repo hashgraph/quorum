@@ -28,16 +28,25 @@ func TestCheckCompatible(t *testing.T) {
 		head        uint64
 		wantErr     *ConfigCompatError
 	}
-	var maxCodeSizev1, maxCodeSizev2 []MaxCodeSizeStruct
-	maxCodeSize0 := MaxCodeSizeStruct{big.NewInt(0), 24}
-	maxCodeSize10 := MaxCodeSizeStruct{big.NewInt(10), 32}
-	maxCodeSize20 := MaxCodeSizeStruct{big.NewInt(20), 48}
+	var storedMaxCodeConfig0, storedMaxCodeConfig1 []MaxCodeConfigStruct
+	defaultRec := MaxCodeConfigStruct{big.NewInt(0), 24}
+	rec1 := MaxCodeConfigStruct{big.NewInt(5), 32}
+	rec2 := MaxCodeConfigStruct{big.NewInt(10), 40}
+	rec3 := MaxCodeConfigStruct{big.NewInt(8), 40}
 
-	maxCodeSizev1 = append(maxCodeSizev1, maxCodeSize0)
-	maxCodeSizev1 = append(maxCodeSizev1, maxCodeSize10)
+	storedMaxCodeConfig0 = append(storedMaxCodeConfig0, defaultRec)
+	storedMaxCodeConfig1 = append(storedMaxCodeConfig1, defaultRec)
+	storedMaxCodeConfig1 = append(storedMaxCodeConfig1, rec1)
+	storedMaxCodeConfig1 = append(storedMaxCodeConfig1, rec2)
 
-	maxCodeSizev2 = append(maxCodeSizev2, maxCodeSize0)
-	maxCodeSizev2 = append(maxCodeSizev2, maxCodeSize20)
+	var passedValidMaxConfig0 []MaxCodeConfigStruct
+	passedValidMaxConfig0 = append(passedValidMaxConfig0, defaultRec)
+	passedValidMaxConfig0 = append(passedValidMaxConfig0, rec1)
+
+	var passedValidMaxConfig1 []MaxCodeConfigStruct
+	passedValidMaxConfig1 = append(passedValidMaxConfig1, defaultRec)
+	passedValidMaxConfig1 = append(passedValidMaxConfig1, rec1)
+	passedValidMaxConfig1 = append(passedValidMaxConfig1, rec3)
 
 	tests := []test{
 		{stored: AllEthashProtocolChanges, new: AllEthashProtocolChanges, head: 0, wantErr: nil},
@@ -99,8 +108,8 @@ func TestCheckCompatible(t *testing.T) {
 			},
 		},
 		{
-			stored: &ChainConfig{MaxCodeSize : maxCodeSizev1},
-			new:    &ChainConfig{MaxCodeSize: maxCodeSizev2},
+			stored: &ChainConfig{MaxCodeSizeChangeBlock: big.NewInt(10)},
+			new:    &ChainConfig{MaxCodeSizeChangeBlock: big.NewInt(20)},
 			head:   30,
 			wantErr: &ConfigCompatError{
 				What:         "max code size change fork block",
@@ -109,15 +118,15 @@ func TestCheckCompatible(t *testing.T) {
 				RewindTo:     9,
 			},
 		},
-		//{
-		//	stored:  &ChainConfig{MaxCodeSizeChangeBlock:big.NewInt(10)},
-		//	new:     &ChainConfig{MaxCodeSizeChangeBlock:big.NewInt(20)},
-		//	head:    4,
-		//	wantErr: nil,
-		//},
 		{
-			stored: &ChainConfig{QIP714Block:big.NewInt(10)},
-			new:    &ChainConfig{QIP714Block:big.NewInt(20)},
+			stored:  &ChainConfig{MaxCodeSizeChangeBlock: big.NewInt(10)},
+			new:     &ChainConfig{MaxCodeSizeChangeBlock: big.NewInt(20)},
+			head:    4,
+			wantErr: nil,
+		},
+		{
+			stored: &ChainConfig{QIP714Block: big.NewInt(10)},
+			new:    &ChainConfig{QIP714Block: big.NewInt(20)},
 			head:   30,
 			wantErr: &ConfigCompatError{
 				What:         "permissions fork block",
@@ -127,12 +136,62 @@ func TestCheckCompatible(t *testing.T) {
 			},
 		},
 		{
-			stored:  &ChainConfig{QIP714Block:big.NewInt(10)},
-			new:     &ChainConfig{QIP714Block:big.NewInt(20)},
+			stored:  &ChainConfig{QIP714Block: big.NewInt(10)},
+			new:     &ChainConfig{QIP714Block: big.NewInt(20)},
 			head:    4,
 			wantErr: nil,
 		},
-
+		{
+			stored: &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig0},
+			new:    &ChainConfig{MaxCodeSizeConfig: nil},
+			head:   4,
+			wantErr: &ConfigCompatError{
+				What:         "genesis file missing max code size information",
+				StoredConfig: big.NewInt(4),
+				NewConfig:    big.NewInt(4),
+				RewindTo:     3,
+			},
+		},
+		{
+			stored:  &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig0},
+			new:     &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig0},
+			head:    4,
+			wantErr: nil,
+		},
+		{
+			stored: &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig0},
+			new:    &ChainConfig{MaxCodeSizeConfig: passedValidMaxConfig0},
+			head:   10,
+			wantErr: &ConfigCompatError{
+				What:         "maxCodeSize data incompatible. updating maxCodeSize for past",
+				StoredConfig: big.NewInt(10),
+				NewConfig:    big.NewInt(10),
+				RewindTo:     9,
+			},
+		},
+		{
+			stored:  &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig0},
+			new:     &ChainConfig{MaxCodeSizeConfig: passedValidMaxConfig0},
+			head:    4,
+			wantErr: nil,
+		},
+		{
+			stored:  &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig1},
+			new:     &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig1},
+			head:    12,
+			wantErr: nil,
+		},
+		{
+			stored:  &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig1},
+			new:     &ChainConfig{MaxCodeSizeConfig: passedValidMaxConfig1},
+			head:    12,
+			wantErr: &ConfigCompatError{
+				What:         "maxCodeSize data incompatible. maxCodeSize historical data does not match",
+				StoredConfig: big.NewInt(12),
+				NewConfig:    big.NewInt(12),
+				RewindTo:     11,
+			},
+		},
 	}
 
 	for _, test := range tests {

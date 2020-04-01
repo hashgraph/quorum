@@ -377,7 +377,7 @@ func (c *ChainConfig) CheckMaxCodeConfigData() (error) {
 			return errors.New("invalid maxCodeSize details. 1st entry should be for zeroth block")
 		}
 		if data.Size < 24 || data.Size > 128 {
-			return errors.New("invalid maxCodeSize detail, size cannot be less than 24 or greater than 128")
+			return errors.New("Genesis max code size must be between 24 and 128")
 		}
 		if data.Block.Cmp(prevBlock) < 0 {
 			return errors.New("invalid maxCodeSize detail, block order has to be ascending")
@@ -398,7 +398,7 @@ func isMaxCodeSizeConfigCompatible(c1, c2 *ChainConfig, head *big.Int) (error, *
 
 	// existing config had maxCodeSizeConfig and new one does not have the same return error
 	if len(c1.MaxCodeSizeConfig) > 0 && len(c2.MaxCodeSizeConfig) == 0 {
-		return fmt.Errorf("genesis file missing max code size infromation"), head, head
+		return fmt.Errorf("genesis file missing max code size information"), head, head
 	}
 
 	if len(c2.MaxCodeSizeConfig) > 0 {
