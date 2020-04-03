@@ -200,10 +200,10 @@ type ChainConfig struct {
 	// /Quorum
 	//
 	// QIP714Block implements the permissions related changes
-	QIP714Block            *big.Int              `json:"qip714Block,omitempty"`
-	MaxCodeSizeChangeBlock *big.Int              `json:"maxCodeSizeChangeBlock,omitempty"`
+	QIP714Block            *big.Int `json:"qip714Block,omitempty"`
+	MaxCodeSizeChangeBlock *big.Int `json:"maxCodeSizeChangeBlock,omitempty"`
 	// to track multiple changes to maxCodeSize
-	MaxCodeSizeConfig      []MaxCodeConfigStruct `json:"maxCodeSizeConfig,omitempty"`
+	MaxCodeSizeConfig []MaxCodeConfigStruct `json:"maxCodeSizeConfig,omitempty"`
 	// Quorum
 }
 
@@ -369,7 +369,7 @@ func (c *ChainConfig) PopulateDefaultMaxCodeData() {
 }
 
 // validates the maxCodeSizeConfig data passed in config
-func (c *ChainConfig) CheckMaxCodeConfigData() (error) {
+func (c *ChainConfig) CheckMaxCodeConfigData() error {
 	if c.MaxCodeSize != 0 || (c.MaxCodeSizeChangeBlock != nil && c.MaxCodeSizeChangeBlock.Cmp(big.NewInt(0)) == 0) {
 		return errors.New("maxCodeSize & maxCodeSizeChangeBlock depricated. Consider using newMaxCodeSize")
 	}
