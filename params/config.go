@@ -370,8 +370,8 @@ func (c *ChainConfig) PopulateDefaultMaxCodeData() {
 
 // validates the maxCodeSizeConfig data passed in config
 func (c *ChainConfig) CheckMaxCodeConfigData() error {
-	if c.MaxCodeSize != 0 || (c.MaxCodeSizeChangeBlock != nil && c.MaxCodeSizeChangeBlock.Cmp(big.NewInt(0)) == 0) {
-		return errors.New("maxCodeSize & maxCodeSizeChangeBlock depricated. Consider using newMaxCodeSize")
+	if c.MaxCodeSize != 0 || (c.MaxCodeSizeChangeBlock != nil && c.MaxCodeSizeChangeBlock.Cmp(big.NewInt(0)) >= 0) {
+		return errors.New("maxCodeSize & maxCodeSizeChangeBlock depricated. Consider using maxCodeSizeConfig")
 	}
 	// validate max code size data
 	// 1. Code size should not be less than 24 and greater than 128
@@ -445,6 +445,7 @@ func isMaxCodeSizeConfigCompatible(c1, c2 *ChainConfig, head *big.Int) (error, *
 
 	return nil, big.NewInt(0), big.NewInt(0)
 }
+
 // /Quorum
 
 // GasTable returns the gas table corresponding to the current phase (homestead or homestead reprice).
