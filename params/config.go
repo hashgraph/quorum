@@ -348,24 +348,18 @@ func (c *ChainConfig) PopulateDefaultMaxCodeData() {
 	if len(c.MaxCodeSizeConfig) > 0 {
 		return
 	}
-	// first time new structure is in use. Set the default record b
-	defaultMaxCodeRec := MaxCodeConfigStruct{big.NewInt(0), MaxCodeSize / 1024}
 
 	if c.MaxCodeSize != 0 &&
 		(c.MaxCodeSizeChangeBlock != nil && c.MaxCodeSizeChangeBlock.Cmp(big.NewInt(0)) > 0) {
 		// add two entries in this case
-		c.MaxCodeSizeConfig = append(c.MaxCodeSizeConfig, defaultMaxCodeRec)
+		//c.MaxCodeSizeConfig = append(c.MaxCodeSizeConfig, defaultMaxCodeRec)
 		maxCodeSizeRec := MaxCodeConfigStruct{c.MaxCodeSizeChangeBlock, c.MaxCodeSize}
 		c.MaxCodeSizeConfig = append(c.MaxCodeSizeConfig, maxCodeSizeRec)
 	} else if c.MaxCodeSize != 0 {
 		// add one record with maxCodeSize as given in config
-		defaultMaxCodeRec.Size = c.MaxCodeSize
-		c.MaxCodeSizeConfig = append(c.MaxCodeSizeConfig, defaultMaxCodeRec)
-	} else {
-		// add the default record
-		c.MaxCodeSizeConfig = append(c.MaxCodeSizeConfig, defaultMaxCodeRec)
+		maxCodeSizeRec := MaxCodeConfigStruct{big.NewInt(0), c.MaxCodeSize}
+		c.MaxCodeSizeConfig = append(c.MaxCodeSizeConfig, maxCodeSizeRec)
 	}
-
 }
 
 // validates the maxCodeSizeConfig data passed in config
@@ -375,13 +369,9 @@ func (c *ChainConfig) CheckMaxCodeConfigData() error {
 	}
 	// validate max code size data
 	// 1. Code size should not be less than 24 and greater than 128
-	// 2. 1st entry should be for block zero
-	// 3. block entries are in ascending order
+	// 2. block entries are in ascending order
 	prevBlock := big.NewInt(0)
-	for i, data := range c.MaxCodeSizeConfig {
-		if i == 0 && data.Block.Int64() != 0 {
-			return errors.New("invalid maxCodeSize details. 1st entry should be for zeroth block")
-		}
+	for _, data := range c.MaxCodeSizeConfig {
 		if data.Size < 24 || data.Size > 128 {
 			return errors.New("Genesis max code size must be between 24 and 128")
 		}
