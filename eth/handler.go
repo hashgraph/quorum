@@ -845,9 +845,7 @@ func (pm *ProtocolManager) NodeInfo() *NodeInfo {
 	// maxCodeSizeConfig changes
 	// /Quorum
 	chainConfig := pm.blockchain.Config()
-	if chainConfig.MaxCodeSize == 0 {
-		chainConfig.MaxCodeSize = uint64(chainConfig.GetMaxCodeSize(pm.blockchain.CurrentBlock().Number())/1024)
-	}
+	chainConfig.MaxCodeSize = uint64(chainConfig.GetMaxCodeSize(pm.blockchain.CurrentBlock().Number()) / 1024)
 
 	return &NodeInfo{
 		Network:    pm.networkID,

@@ -28,16 +28,21 @@ func TestCheckCompatible(t *testing.T) {
 		head        uint64
 		wantErr     *ConfigCompatError
 	}
-	var storedMaxCodeConfig0, storedMaxCodeConfig1 []MaxCodeConfigStruct
+	var storedMaxCodeConfig0, storedMaxCodeConfig1, storedMaxCodeConfig2 []MaxCodeConfigStruct
 	defaultRec := MaxCodeConfigStruct{big.NewInt(0), 24}
 	rec1 := MaxCodeConfigStruct{big.NewInt(5), 32}
 	rec2 := MaxCodeConfigStruct{big.NewInt(10), 40}
 	rec3 := MaxCodeConfigStruct{big.NewInt(8), 40}
 
+
 	storedMaxCodeConfig0 = append(storedMaxCodeConfig0, defaultRec)
+
 	storedMaxCodeConfig1 = append(storedMaxCodeConfig1, defaultRec)
 	storedMaxCodeConfig1 = append(storedMaxCodeConfig1, rec1)
 	storedMaxCodeConfig1 = append(storedMaxCodeConfig1, rec2)
+
+	storedMaxCodeConfig2 = append(storedMaxCodeConfig2, rec1)
+	storedMaxCodeConfig2 = append(storedMaxCodeConfig2, rec2)
 
 	var passedValidMaxConfig0 []MaxCodeConfigStruct
 	passedValidMaxConfig0 = append(passedValidMaxConfig0, defaultRec)
@@ -163,7 +168,7 @@ func TestCheckCompatible(t *testing.T) {
 			new:    &ChainConfig{MaxCodeSizeConfig: passedValidMaxConfig0},
 			head:   10,
 			wantErr: &ConfigCompatError{
-				What:         "maxCodeSize data incompatible. updating maxCodeSize for past",
+				What:         "maxCodeSizeConfig data incompatible. updating maxCodeSize for past",
 				StoredConfig: big.NewInt(10),
 				NewConfig:    big.NewInt(10),
 				RewindTo:     9,
@@ -182,15 +187,21 @@ func TestCheckCompatible(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			stored:  &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig1},
-			new:     &ChainConfig{MaxCodeSizeConfig: passedValidMaxConfig1},
-			head:    12,
+			stored: &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig1},
+			new:    &ChainConfig{MaxCodeSizeConfig: passedValidMaxConfig1},
+			head:   12,
 			wantErr: &ConfigCompatError{
-				What:         "maxCodeSize data incompatible. maxCodeSize historical data does not match",
+				What:         "maxCodeSizeConfig data incompatible. maxCodeSize historical data does not match",
 				StoredConfig: big.NewInt(12),
 				NewConfig:    big.NewInt(12),
 				RewindTo:     11,
 			},
+		},
+		{
+			stored:  &ChainConfig{MaxCodeSize: 32},
+			new:     &ChainConfig{MaxCodeSizeConfig: storedMaxCodeConfig2},
+			head:    8,
+			wantErr: nil,
 		},
 	}
 

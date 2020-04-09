@@ -397,7 +397,23 @@ func isMaxCodeSizeConfigCompatible(c1, c2 *ChainConfig, head *big.Int) (error, *
 		return fmt.Errorf("genesis file missing max code size information"), head, head
 	}
 
+	c2RecsBelowHead := 0
+	for _, data := range c2.MaxCodeSizeConfig {
+		if data.Block.Cmp(head) <= 0 {
+			c2RecsBelowHead++
+		} else {
+			break
+		}
+	}
+
 	if len(c2.MaxCodeSizeConfig) > 0 {
+		// if there is only one past record, check if this is a migration scenario
+		// where in maxCodeSize was set but maxCodeSizeChangeBlock was not set
+		// allow this scenario
+		if len(c1.MaxCodeSizeConfig) == 0 && c1.MaxCodeSizeChangeBlock == nil &&
+			c2.MaxCodeSizeConfig[0].Size == c1.MaxCodeSize {
+			return nil, big.NewInt(0), big.NewInt(0)
+		}
 		c1.PopulateDefaultMaxCodeData()
 	}
 
@@ -411,25 +427,16 @@ func isMaxCodeSizeConfigCompatible(c1, c2 *ChainConfig, head *big.Int) (error, *
 			break
 		}
 	}
-	c2RecsBelowHead := 0
-	for _, data := range c2.MaxCodeSizeConfig {
-		if data.Block.Cmp(head) <= 0 {
-			c2RecsBelowHead++
-		} else {
-			break
-		}
-	}
-
 	// if the count of past records is not matching return error
 	if c1RecsBelowHead != c2RecsBelowHead {
-		return errors.New("maxCodeSize data incompatible. updating maxCodeSize for past"), head, head
+		return errors.New("maxCodeSizeConfig data incompatible. updating maxCodeSize for past"), head, head
 	}
 
 	// validate that each past record is matching exactly. if not return error
 	for i := 0; i < c1RecsBelowHead; i++ {
 		if c1.MaxCodeSizeConfig[i].Block.Cmp(c2.MaxCodeSizeConfig[i].Block) != 0 ||
 			c1.MaxCodeSizeConfig[i].Size != c2.MaxCodeSizeConfig[i].Size {
-			return errors.New("maxCodeSize data incompatible. maxCodeSize historical data does not match"), head, head
+			return errors.New("maxCodeSizeConfig data incompatible. maxCodeSize historical data does not match"), head, head
 		}
 	}
 
