@@ -110,7 +110,7 @@ func setup() {
 		},
 	}
 	ethConf := &eth.Config{
-		Genesis:   &core.Genesis{Config: params.AllEthashProtocolChanges, GasLimit: 10000000000, Alloc: genesisAlloc},
+		Genesis:   &core.Genesis{Config: params.QuorumTestChainConfig, GasLimit: 10000000000, Alloc: genesisAlloc},
 		Etherbase: guardianAddress,
 		Ethash: ethash.Config{
 			PowMode: ethash.ModeTest,
@@ -132,6 +132,7 @@ func setup() {
 	var permUpgrInstance *pbind.PermUpgr
 
 	guardianTransactor := bind.NewKeyedTransactor(guardianKey)
+	guardianTransactor.GasPrice = big.NewInt(0)
 
 	permUpgrAddress, _, permUpgrInstance, err = pbind.DeployPermUpgr(guardianTransactor, backend, guardianAddress)
 	if err != nil {
